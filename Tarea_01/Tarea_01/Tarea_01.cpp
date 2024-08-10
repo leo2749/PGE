@@ -61,6 +61,7 @@ public:
     bool get_estado_pago();
     void set_numero_vuelo(string n);
     void Cargar_pasajero(Pasajero p);
+    void Mostrar_pasajeros();
 
 private:
     int cant_pasajeros;
@@ -83,6 +84,20 @@ void Reserva::set_numero_vuelo(string n) { nro_vuelo = n; }
 
 int Reserva::get_nro_reserva() { return Nro_reserva; }
 bool Reserva::get_estado_pago() { return Estado_Pago; }
+
+void Reserva::Mostrar_pasajeros() {
+    for (int i = 0; i < pasajeros.size(); i++) {
+        cout << "Pasajero " << i + 1 << ":\n";
+        cout << "Nombre: " << pasajeros[i].get_nombre() << " " << pasajeros[i].get_apellido() << endl;
+        cout << "DNI: " << pasajeros[i].get_DNI() << endl;
+        cout << "Sexo: " << pasajeros[i].get_sexo() << endl;
+        cout << "Email: " << pasajeros[i].get_mail() << endl;
+        cout << "Telefono: " << pasajeros[i].get_telefono() << endl;
+        cout << "Direccion: " << pasajeros[i].get_direccion() << endl;
+        cout << "Número de asiento: " << pasajeros[i].get_numero_asiento() << endl;
+        cout << "---------------------------\n";
+    }
+}
 
 class Vuelo {
 public:
@@ -113,6 +128,8 @@ private:
     Pasajero Asientos[300];
     vector<Reserva> Reservas;
     int ocupados = 0;
+
+    friend class SistemaReservas; // Para que SistemaReservas pueda acceder a los miembros privados
 };
 
 Vuelo::Vuelo() {}
@@ -140,6 +157,10 @@ void Vuelo::Cargar_Reservar() {
     char s;
     cout << "Cuantos Pasajeros son: ";
     cin >> cant;
+    if (cant > asientos_disponibles()) {
+        cout << "No hay suficientes asientos disponibles en este vuelo.\n";
+        return;
+    }
     r.set_cant_pasajeros(cant);
     for (int i = 0; i < cant; i++) {
         cout << "Pasajero " << i + 1 << "\n";
@@ -168,7 +189,7 @@ void Vuelo::Cargar_Reservar() {
         cout << "Telefono: ";
         cin >> o;
         p.set_telefono(o);
-        p.set_numero_asiento(300 - ocupados);
+        p.set_numero_asiento(ocupados + 1);
         ocupados += 1;
         r.Cargar_pasajero(p);
         cout << "Pasajero Cargado correctamente.\n";
@@ -185,9 +206,16 @@ void Vuelo::Detalle_Vuelo() {
     cout << "Tiempo de salida: " << time << endl;
     cout << "Fecha del vuelo: " << fecha << endl;
     cout << "Asientos disponibles: " << asientos_disponibles() << endl;
+
+    Ver_Reservas(); // Llama a la función para mostrar las reservas y los detalles de los pasajeros
 }
 
 void Vuelo::Ver_Reservas() {
+    if (Reservas.empty()) {
+        cout << "No hay reservas para este vuelo.\n";
+        return;
+    }
+
     for (int i = 0; i < Reservas.size(); i++) {
         cout << "---------------------------\n";
         cout << "Numero de reserva: " << Reservas[i].get_nro_reserva() << endl;
@@ -199,6 +227,9 @@ void Vuelo::Ver_Reservas() {
         else {
             cout << "Pago pendiente.\n";
         }
+        cout << "Detalles de los pasajeros:\n";
+        Reservas[i].Mostrar_pasajeros();
+        cout << "---------------------------\n";
     }
 }
 
@@ -206,17 +237,19 @@ void Vuelo::Generar_Detalles_Vuelo(string origen, string destino) {
     this->origen = origen;
     this->destino = destino;
 
-    //genero numero de vuelo y tiempo(formato 24h) aleatorio
+    // Generar numero de vuelo aleatorio
     numero_vuelo = "V" + to_string(1000 + rand() % 9000);
+
+    // Generar tiempo de salida aleatorio (formato 24h)
     time = 1000 + rand() % 900;
 
-    // Generar fecha aleatoria (formato d/m/y)
-    int dia = 1 + rand() % 28;
-    int mes = 1 + rand() % 12;
-    int anio = 2024;
-    fecha = to_string(dia) + "/" + to_string(mes) + "/" + to_string(anio);
+    // Generar fecha aleatoria (formato dd/mm/yyyy)
+    int day = 1 + rand() % 28;
+    int month = 1 + rand() % 12;
+    int year = 2024;
+    fecha = to_string(day) + "/" + to_string(month) + "/" + to_string(year);
 
-    cout << "Detalles del vuelo: \n";
+    cout << "Detalles del vuelo generados automaticamente:\n";
     cout << "Numero Vuelo: " << numero_vuelo << endl;
     cout << "Origen: " << origen << endl;
     cout << "Destino: " << destino << endl;
@@ -224,50 +257,182 @@ void Vuelo::Generar_Detalles_Vuelo(string origen, string destino) {
     cout << "Tiempo de salida: " << time << " hrs" << endl;
 }
 
+class SistemaReservas {
+public:
+    void agregar_vuelo(Vuelo v);
+    void mostrar_vuelos();
+    void seleccionar_vuelo_para_reserva();
+    void crear_nuevo_vuelo();
+    void ver_detalles_vuelo();
+    void ver_reservas();
+    void cargar_reserva();
+    vector<Vuelo> vuelos;
+};
+
+void SistemaReservas::agregar_vuelo(Vuelo v) {
+    vuelos.push_back(v);
+    cout << "Vuelo agregado al sistema.\n";
+}
+
+void SistemaReservas::mostrar_vuelos() {
+    for (int i = 0; i < vuelos.size(); i++) {
+        cout << i + 1 << ". Vuelo " << vuelos[i].get_numero_vuelo()
+            << " (" << vuelos[i].get_origen() << " -> " << vuelos[i].get_destino() << ")\n";
+    }
+}
+
+void SistemaReservas::seleccionar_vuelo_para_reserva() {
+    if (vuelos.empty()) {
+        cout << "No hay vuelos disponibles. Por favor, cree un nuevo vuelo.\n";
+        crear_nuevo_vuelo();
+        return;
+    }
+
+    mostrar_vuelos();
+
+    int opcion;
+    cout << "Seleccione un vuelo para hacer la reserva: ";
+    cin >> opcion;
+
+    if (opcion < 1 || opcion > vuelos.size()) {
+        cout << "Opcion no valida. Por favor intente nuevamente.\n";
+        return;
+    }
+
+    Vuelo& vuelo_seleccionado = vuelos[opcion - 1];
+
+    if (vuelo_seleccionado.asientos_disponibles() > 0) {
+        vuelo_seleccionado.Cargar_Reservar();
+    }
+    else {
+        cout << "El vuelo seleccionado está lleno. \n";
+        cout << "1. Seleccionar otro vuelo\n2. Crear nuevo vuelo\nOpcion: ";
+        cin >> opcion;
+
+        if (opcion == 1) {
+            seleccionar_vuelo_para_reserva();
+        }
+        else if (opcion == 2) {
+            crear_nuevo_vuelo();
+        }
+    }
+}
+
+void SistemaReservas::crear_nuevo_vuelo() {
+    string origen, destino;
+    cout << "Ingrese el Origen del Vuelo: ";
+    cin >> origen;
+    cout << "Ingrese el Destino del Vuelo: ";
+    cin >> destino;
+
+    Vuelo v;
+    v.Generar_Detalles_Vuelo(origen, destino);
+    agregar_vuelo(v);
+}
+
+void SistemaReservas::ver_detalles_vuelo() {
+    if (vuelos.empty()) {
+        cout << "No hay vuelos disponibles.\n";
+        return;
+    }
+
+    mostrar_vuelos();
+
+    int opcion;
+    cout << "Seleccione un vuelo para ver los detalles: ";
+    cin >> opcion;
+
+    if (opcion < 1 || opcion > vuelos.size()) {
+        cout << "Opcion no valida. Por favor intente nuevamente.\n";
+        return;
+    }
+
+    vuelos[opcion - 1].Detalle_Vuelo();
+}
+
+void SistemaReservas::ver_reservas() {
+    if (vuelos.empty()) {
+        cout << "No hay vuelos disponibles.\n";
+        return;
+    }
+
+    mostrar_vuelos();
+
+    int opcion;
+    cout << "Seleccione un vuelo para ver las reservas: ";
+    cin >> opcion;
+
+    if (opcion < 1 || opcion > vuelos.size()) {
+        cout << "Opcion no valida. Por favor intente nuevamente.\n";
+        return;
+    }
+
+    vuelos[opcion - 1].Ver_Reservas();
+}
+
+void SistemaReservas::cargar_reserva() {
+    if (vuelos.empty()) {
+        cout << "No hay vuelos disponibles. Por favor, cree un nuevo vuelo.\n";
+        crear_nuevo_vuelo();
+        return;
+    }
+
+    mostrar_vuelos();
+
+    int opcion;
+    cout << "Seleccione un vuelo para cargar una reserva: ";
+    cin >> opcion;
+
+    if (opcion < 1 || opcion > vuelos.size()) {
+        cout << "Opcion no valida. Por favor intente nuevamente.\n";
+        return;
+    }
+
+    vuelos[opcion - 1].Cargar_Reservar();
+}
+
 void mostrar_menu() {
-    cout << "Bienvenido al sistema de reservas de vuelo\n";
-    cout << "1. Ingresar Origen y Destino del Vuelo\n";
-    cout << "2. Cargar Reserva\n";
-    cout << "3. Ver Reservas\n";
-    cout << "4. Detalle del Vuelo\n";
-    cout << "5. Salir\n";
+    cout << "1. Crear nuevo vuelo\n";
+    cout << "2. Hacer reserva en vuelo existente\n";
+    cout << "3. Ver detalles de un vuelo\n";
+    cout << "4. Ver todas las reservas\n";
+    cout << "5. Cargar una nueva reserva\n";
+    cout << "6. Salir\n";
     cout << "Seleccione una opcion: ";
 }
 
 int main() {
-    std::srand(std::time(nullptr));
-    Vuelo v;
+    std::srand(std::time(nullptr)); // Inicializar el generador de numeros aleatorios
 
+    SistemaReservas sistema;
     bool salir = false;
-    int opcion;
+
     while (!salir) {
         mostrar_menu();
+        int opcion;
         cin >> opcion;
 
         switch (opcion) {
-        case 1: {
-            string origen, destino;
-            cout << "Ingrese el Origen del Vuelo: ";
-            cin >> origen;
-            cout << "Ingrese el Destino del Vuelo: ";
-            cin >> destino;
-            v.Generar_Detalles_Vuelo(origen, destino);
+        case 1:
+            sistema.crear_nuevo_vuelo();
             break;
-        }
         case 2:
-            v.Cargar_Reservar();
+            sistema.seleccionar_vuelo_para_reserva();
             break;
         case 3:
-            v.Ver_Reservas();
+            sistema.ver_detalles_vuelo();
             break;
         case 4:
-            v.Detalle_Vuelo();
+            sistema.ver_reservas();
             break;
         case 5:
+            sistema.cargar_reserva();
+            break;
+        case 6:
             salir = true;
             break;
         default:
-            cout << "Opcion no valida, por favor intente nuevamente.\n";
+            cout << "Opcion no valida. Por favor intente nuevamente.\n";
         }
         cout << endl;
     }
