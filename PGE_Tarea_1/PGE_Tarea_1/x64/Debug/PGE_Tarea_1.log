@@ -1,3 +1,0 @@
-﻿  PGE_Tarea_1.cpp
-C:\Users\Pc\source\repos\PGE_Tarea_1\PGE_Tarea_1\PGE_Tarea_1.cpp(315,22): warning C4244: 'argumento': conversión de 'time_t' a 'unsigned int'; posible pérdida de datos
-  PGE_Tarea_1.vcxproj -> C:\Users\Pc\source\repos\PGE_Tarea_1\x64\Debug\PGE_Tarea_1.exe
