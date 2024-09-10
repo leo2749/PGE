@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "TAREA_06_SEGUNDAFUNCION/1.0.0": {
+        "runtime": {
+          "TAREA_06_SEGUNDAFUNCION.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "TAREA_06_SEGUNDAFUNCION/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
